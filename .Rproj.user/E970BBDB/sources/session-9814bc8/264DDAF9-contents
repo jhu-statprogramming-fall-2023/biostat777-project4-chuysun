@@ -1,0 +1,299 @@
+---
+title: "Tornado"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(ggplot2)
+library(dplyr)
+library(tidytuesdayR)
+library(tidyverse)
+library(here)
+library(ggpubr)
+library(lubridate)
+library(forcats)
+library(purrr)
+```
+
+```{r global}
+if (!dir.exists(here("data"))) {
+    dir.create(here("data"))
+}
+
+files = c("tornados.rda")
+if (any(!file.exists(here("data", files)))) {
+    tuesdata = tidytuesdayR::tt_load('2023-05-16')
+    tornados = tuesdata$tornados
+    # save the files to rda objects
+    save(tornados, file = here("data", "tornados.rda"), compress = "xz")
+}
+
+load(here("data", "tornados.rda"))
+```
+
+
+# About 
+
+## Column {data-width=650 }
+
+### Video illustration        
+
+
+### Purpose of this dashboard 
+
+This dashboard aims to provide information of tornadoes in the United State from 1950-2022. 
+
+
+### Data Source  
+
+The data is from Tidytuesday. And originally from comes from NOAA's National Weather Service Storm Prediction Center Severe Weather Maps, Graphics, and Data Page. 
+
+# Additional Info 
+
+Column {data-width=350,  .tabset .tab-fade}
+-----------------------------------------------------------------------
+
+### More about Dataset 
+
+Variable in the original but not include here       
+*   om           
+*   dy         
+*   time           
+*   tz 
+*   datetime_utc 
+*   stf          
+*   fat         
+*   loss         
+*   slat         
+*   slon 
+*   elat         
+*   elon          
+*   len          
+*   wid           
+*   ns           
+*   sn           
+*   f1           
+*   f2    
+*   f3           
+*   f4           
+*   fc
+
+### More about Tornado    
+
+More Information about Tornado
+
+Magnitude: 
+Magnitude on the F scale (EF beginning in 2007). More info can be find [here](https://www.weather.gov/oun/efscale)
+
+
+
+Data 
+=====================================
+
+Column {data-height="150" data-width="75" }
+-------------------------------------
+
+
+### Data preview 
+The data is from Tidytuesday. And originally from comes from NOAA's National Weather Service Storm Prediction Center Severe Weather Maps, Graphics, and Data Page. 
+
+```{r}
+tornados_shiny=tornados%>%
+    filter(yr>=2012)%>%
+    filter(mag>0)%>%
+    arrange(date)%>%
+    select(yr,mo, date, st, mag, inj)%>%
+    rename(year=yr, month=mo, state=st, magnitude=mag, injuries=inj)%>%
+    na.omit()
+DT::datatable(tornados_shiny)
+```
+
+
+# Data Visualization 1
+
+## Column { .sidebar }
+
+### Yearly Data
+
+```{r}
+selectInput(inputId = "state_selected", 
+              label = "Select a state to see the distribution of tornado in magnitude and injuries:",
+              choices = tornados_shiny%>% 
+              pull(state) %>% 
+              unique()%>%
+              sort(), 
+              selected = "AL")
+selectInput(inputId = "year_selected", 
+              label = "Select a year to see the distribution of tornado in magnitude and injuries:",
+              choices = tornados_shiny%>% 
+              pull(year) %>% 
+              unique()%>%
+              sort(), 
+              selected = "2012")
+```
+
+## Row 
+### title {data-width=550}
+
+```{r, fig.width= 7, fig.height=6}
+renderPlot({
+state_yr = tornados_shiny %>% 
+  filter(state == input$state_selected & year==input$year_selected)
+
+state_yr%>%
+    ggplot(aes(x=month, y=magnitude))+
+    geom_point()+
+    labs(title = "Tornados magnitude of US states in each months",
+     x="States", y="tornados magnitude", caption = "Chuyi Sun")
+})
+```
+
+### title 2 
+
+```{r}
+renderPlot({
+state_yr = tornados_shiny %>% 
+  filter(state == input$state_selected & year==input$year_selected)
+state_yr%>%
+    ggplot(aes(x=month, y=injuries))+
+    geom_point()+
+    labs(title = "Tornados injuries of US states in each months",
+       x="States", y="tornados injuries", caption = "Chuyi Sun")
+})
+```
+
+# Data Visualization 2       
+
+## Column { .sidebar }
+
+```{r}
+selectInput(inputId = "state_history", 
+              label = "Select a state to see the distribution of tornado in magnitude and injuries:",
+              choices = tornados_shiny%>% 
+              pull(state) %>% 
+              unique()%>%
+              sort(), 
+              selected = "AL")
+```
+
+## Column 
+### title3 {data-width=700}
+```{r, fig.width=12}
+renderPlot({
+state_plot = tornados_shiny %>% 
+  filter(state == input$state_history)%>%
+  group_by(year)%>%
+  summarise(mag_mean=mean(magnitude, na.rm = T))
+
+state_plot%>%
+  ggplot(aes(x=year, y=mag_mean))+
+  geom_line()+
+  labs(title = paste(input$state_history,"average tornados magnitude from 2012-2020"),
+      x="years", y="average tornados magnitude", caption = "Chuyi Sun")+
+  theme(plot.title=element_text(size = 15), plot.subtitle = element_text(size = 9))
+
+  })
+```
+
+
+Analysis    
+=====================================
+
+```{r}
+FL=tornados%>%
+  filter(st=="FL")%>%
+  group_by(yr)%>%
+  select(yr, mag)%>%
+  summarise(fl_mag_mean=mean(mag, na.rm = T))
+
+```
+
+### Plot 1 
+
+```{r,fig.width=10}
+FL%>%
+  ggplot(aes(x=yr, y=fl_mag_mean))+
+  geom_line()+
+  labs(title = "Florida average tornados magnitude from 1950-2020",
+       subtitle = "There is a decreasing trend from 1950 to 2020. 
+The lowest period is around 2000.",  x="years", y="average tornados magnitude", caption = "Chuyi Sun")+
+  theme(plot.title=element_text(size = 15), plot.subtitle = element_text(size = 9))
+
+```
+
+### Plot 2 
+```{r, fig.height=12, fig.width=10}
+state_summary=tornados%>%
+  mutate(tz=as.factor(tz))%>%
+  mutate(st=as.factor(st))%>%
+  select(-c("slat", "slon", "elat", "elon"))%>%
+  group_by(st,mo)%>%
+  arrange(mag)%>%
+  summarise(state_mean=mean(mag, na.rm = T),.groups = "drop")
+state_summary%>%
+  ggplot(aes(x=st, y=state_mean))+
+  geom_point()+
+  facet_wrap(~mo, nrow = 6, scales = "free")+ 
+  labs(title = "Average tornados magnitude of US states in each months",
+       subtitle = "Except for September, other months tend to have similar 
+average tornado magnitude. Alaska almost never has a tornado.", x="States", y="average tornados magnitude", caption = "Chuyi Sun")+
+  geom_text(aes(label=st),size=2,vjust = -0.5)+
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1, size = 5))
+
+```
+
+### Plot 3  
+
+```{r,fig.width=10}
+tornados%>%
+  mutate(stage=case_when(yr>1949 & yr<1975 ~ "1950-1974", yr>1974 & yr<2000 ~ "1975-1999",yr>1999 & yr<2025 ~ "2000-2024"))%>%
+  select(stage, inj)%>%
+  group_by(stage)%>%
+  summarise(stage_sum=sum(inj))%>%
+  ggplot(aes(x=stage, y=stage_sum))+
+  geom_bar(stat="identity")+
+  labs(title = "Total injuries in tornados in every 24 years",
+       subtitle = "Between 1950-1974, there were a lot of injuries, 
+and 2000-2024 had the lowest injuries. There is a decreasing trend over time.", x="States", y="average tornados magnitude", caption = "Chuyi Sun")
+
+```
+
+### Summary  
+
+We can see a decreasing trend in the magnitude of the tornados, therefore the trend of injuries is also decreasing. Besides, the reduction of injuries might be due to the development of prevention. Looking at the spread of the tornado in each month, except for September, other months tend to have similar average tornado magnitude.
+
+###  Functions used 
+
+##### Dplyr  
+
+* mutate
+* group_by
+* filter
+* select
+* case_when
+* summarise
+
+
+##### ggplot2  
+
+* geom_line
+* geom_point
+* geom_bar
+* geom_text
+* facet_wrap
+
+##### purrr 
+
+* map_chr
+* map 
+
+
+## statics content can overlap with data analysis 
+
+
+
