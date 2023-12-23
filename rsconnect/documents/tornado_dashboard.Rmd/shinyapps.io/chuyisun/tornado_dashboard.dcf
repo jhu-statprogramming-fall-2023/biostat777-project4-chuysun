@@ -1,0 +1,12 @@
+name: tornado_dashboard
+title: tornado_dashboard
+username: chuyisun
+account: chuyisun
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 10841225
+bundleId: 8077916
+url: https://chuyisun.shinyapps.io/tornado_dashboard/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

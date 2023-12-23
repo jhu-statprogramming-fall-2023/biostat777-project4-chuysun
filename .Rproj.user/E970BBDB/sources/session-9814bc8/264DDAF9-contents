@@ -18,6 +18,8 @@ library(ggpubr)
 library(lubridate)
 library(forcats)
 library(purrr)
+library(shiny)
+library(DT)
 ```
 
 ```{r global}
@@ -46,7 +48,7 @@ load(here("data", "tornados.rda"))
 <iframe
     width="640"
     height="480"
-    src="https://youtu.be/XmbQ8PgmX_4"
+    src="https://www.youtube.com/embed/XmbQ8PgmX_4"
     frameborder="0"
     allow="autoplay; encrypted-media"
     allowfullscreen
