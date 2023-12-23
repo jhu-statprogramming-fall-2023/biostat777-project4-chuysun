@@ -43,15 +43,25 @@ load(here("data", "tornados.rda"))
 
 ### Video illustration        
 
+<iframe
+    width="640"
+    height="480"
+    src="https://youtu.be/XmbQ8PgmX_4"
+    frameborder="0"
+    allow="autoplay; encrypted-media"
+    allowfullscreen
+>
+</iframe>
 
 ### Purpose of this dashboard 
 
-This dashboard aims to provide information of tornadoes in the United State from 1950-2022. 
+This dashboard aims to provide information of tornadoes in the United State from 2012-2022. Specifically, include the 
+maginitude, injuries statistics of each state, as well as the trend of the Tornado.
 
 
 ### Data Source  
 
-The data is from Tidytuesday. And originally from comes from NOAA's National Weather Service Storm Prediction Center Severe Weather Maps, Graphics, and Data Page. 
+The data is from [Tidytuesday](https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-05-16/readme.md). And originally from comes from NOAA's National Weather Service Storm Prediction Center Severe Weather Maps, Graphics, and Data Page. 
 
 # Additional Info 
 
@@ -60,37 +70,40 @@ Column {data-width=350,  .tabset .tab-fade}
 
 ### More about Dataset 
 
-Variable in the original but not include here       
-*   om           
-*   dy         
-*   time           
-*   tz 
-*   datetime_utc 
-*   stf          
-*   fat         
-*   loss         
-*   slat         
-*   slon 
-*   elat         
-*   elon          
-*   len          
-*   wid           
-*   ns           
-*   sn           
-*   f1           
-*   f2    
-*   f3           
-*   f4           
-*   fc
+Variable in the original dataset but not include in the analysis       
+*   om: Tornado number. Effectively an ID for this tornado in this year.       
+*   dy: Day of the month         
+*   time: Time           
+*   tz: Canonical tz database timezone.        
+*   datetime_utc: Date and time normalized to UTC        
+*   stf: State FIPS (Federal Information Processing Standards) number          
+*   fat: Number of fatalities         
+*   loss: Estimated property loss information in dollars.         
+*   slat: Starting latitude in decimal degrees.         
+*   slon: Starting longitude in decimal degrees 
+*   elat: Ending latitude in decimal degrees.         
+*   elon: Ending longitude in decimal degrees          
+*   len: Length in miles          
+*   wid: Width in yards           
+*   ns: Number of states affected by this tornado           
+*   sn: State number for this row. 1 means the row contains the entire track information for this state, 0 means there is at least one more entry for this state for this tornado           
+*   f1: FIPS code for the 1st county           
+*   f2: FIPS code for the 2nd county.    
+*   f3: FIPS code for the 3rd county.           
+*   f4: FIPS code for the 4th county.           
+*   fc: Was the mag column estimated?
 
 ### More about Tornado    
 
 More Information about Tornado
 
-Magnitude: 
+About Tornado       
+[Here](https://www.weather.gov/ffc/torntext) is a intoduction of the Tornado, if you are interested in. 
+
+Magnitude        
 Magnitude on the F scale (EF beginning in 2007). More info can be find [here](https://www.weather.gov/oun/efscale)
 
-
+[State FIPS (Federal Information Processing Standards) number](https://www.bls.gov/respondents/mwr/electronic-data-interchange/appendix-d-usps-state-abbreviations-and-fips-codes.htm)
 
 Data 
 =====================================
@@ -114,11 +127,11 @@ DT::datatable(tornados_shiny)
 ```
 
 
-# Data Visualization 1
+# Monthly Data
 
 ## Column { .sidebar }
 
-### Yearly Data
+### Year(2012-2020)
 
 ```{r}
 selectInput(inputId = "state_selected", 
@@ -138,7 +151,7 @@ selectInput(inputId = "year_selected",
 ```
 
 ## Row 
-### title {data-width=550}
+### Tornados magnitude {data-width=550}
 
 ```{r, fig.width= 7, fig.height=6}
 renderPlot({
@@ -148,12 +161,12 @@ state_yr = tornados_shiny %>%
 state_yr%>%
     ggplot(aes(x=month, y=magnitude))+
     geom_point()+
-    labs(title = "Tornados magnitude of US states in each months",
-     x="States", y="tornados magnitude", caption = "Chuyi Sun")
+    labs(title = "Tornados magnitude",
+     x="Month", y="tornados magnitude", caption = "Chuyi Sun")
 })
 ```
 
-### title 2 
+### Tornados injuries 
 
 ```{r}
 renderPlot({
@@ -162,18 +175,20 @@ state_yr = tornados_shiny %>%
 state_yr%>%
     ggplot(aes(x=month, y=injuries))+
     geom_point()+
-    labs(title = "Tornados injuries of US states in each months",
-       x="States", y="tornados injuries", caption = "Chuyi Sun")
+    labs(title = "Tornados total injuries",
+       x="Month", y="tornados injuries", caption = "Chuyi Sun")
 })
 ```
 
-# Data Visualization 2       
+# History      
 
 ## Column { .sidebar }
 
+### Historical Data
+
 ```{r}
 selectInput(inputId = "state_history", 
-              label = "Select a state to see the distribution of tornado in magnitude and injuries:",
+              label = "Select a state to see the trend of average tornodao magnitude:",
               choices = tornados_shiny%>% 
               pull(state) %>% 
               unique()%>%
@@ -182,7 +197,7 @@ selectInput(inputId = "state_history",
 ```
 
 ## Column 
-### title3 {data-width=700}
+### Average tornados magnitude {data-width=700}
 ```{r, fig.width=12}
 renderPlot({
 state_plot = tornados_shiny %>% 
